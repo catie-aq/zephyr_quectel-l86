@@ -1,0 +1,9 @@
+# Copyright (c) 2024 CATIE
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig LX6G
+    bool "Quectel Lx6G gnss sensor"
+    default y
+    depends on DT_HAS_QUECTEL_LX6G_ENABLED
+    help
+      Enable driver for Quectel Lx6G gnss sensor.
