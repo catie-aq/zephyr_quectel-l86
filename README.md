@@ -1,3 +1,3 @@
-# Quectel Lx6G Sensor Driver
+# Quectel L86 Modem Driver
 
-Quectel Lx6G gnss sensor driver for Zephyr OS.
+Quectel L86 gnss modem driver for Zephyr OS.
