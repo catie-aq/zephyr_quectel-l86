@@ -1,9 +1,0 @@
-# Copyright (c) 2024 CATIE
-# SPDX-License-Identifier: Apache-2.0
-
-description: |
-    Quectel Lx6G gnss sensor
-
-compatible: "quectel,lx6g"
-
-include: [sensor-device.yaml]

@@ -1,8 +1,6 @@
 # Copyright (c) 2024 CATIE
 # SPDX-License-Identifier: Apache-2.0
 
-if SENSOR
+zephyr_library()
 
-rsource "quectel/Kconfig"
-
-endif # SENSOR
+zephyr_library_sources(lx6.c)

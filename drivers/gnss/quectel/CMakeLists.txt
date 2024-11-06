@@ -1,6 +1,4 @@
 # Copyright (c) 2024 CATIE
 # SPDX-License-Identifier: Apache-2.0
 
-zephyr_library()
-
-zephyr_library_sources(lx6g.c)
+add_subdirectory_ifdef(CONFIG_GNSS_QUECTEL_LX6 lx6)

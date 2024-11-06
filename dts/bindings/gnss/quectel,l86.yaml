@@ -1,0 +1,11 @@
+# Copyright (c) 2024 CATIE
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+    Quectel L86 gnss modem
+
+compatible: "quectel,l86"
+
+include:
+  - uart-device.yaml
+  - gnss-pps.yaml

@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "log.h": "c",
+        "gnss.h": "c",
+        "gpio.h": "c",
+        "device_runtime.h": "c",
+        "uart.h": "c",
+        "string.h": "c"
+    }
+}

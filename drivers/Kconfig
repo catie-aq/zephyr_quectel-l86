@@ -3,6 +3,6 @@
 
 menu "Device Drivers"
 
-rsource "sensor/Kconfig"
+rsource "gnss/Kconfig"
 
 endmenu
