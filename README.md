@@ -1,3 +1,3 @@
-# Quectel L86 Modem Driver
+# Quectel LG77L & Lx0 & Lx6 & LC86L Series GNSS Modem Drivers
 
-Quectel L86 gnss modem driver for Zephyr OS.
+Zephyr OS GNSS modem drivers for the Quectel LG77L & Lx0 & Lx6 & LC86L Series
