@@ -17,6 +17,5 @@
 		compatible = "quectel,l86";
 		pps-mode = "GNSS_PPS_MODE_DISABLED";
 		status = "okay";
-		// zephyr,deferred-init;
 	};
 };
