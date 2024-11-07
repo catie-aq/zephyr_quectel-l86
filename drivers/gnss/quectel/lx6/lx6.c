@@ -204,7 +204,7 @@ static int quectel_lx6_resume(const struct device *dev)
 
 	quectel_lx6_await_pm_ready(dev);
 
-	ret = modem_pipe_open(data->uart_pipe);
+	ret = modem_pipe_open(data->uart_pipe, K_SECONDS(10));
 	if (ret < 0) {
 		LOG_ERR("Failed to open pipe");
 		return ret;
@@ -213,21 +213,21 @@ static int quectel_lx6_resume(const struct device *dev)
 	ret = modem_chat_attach(&data->chat, data->uart_pipe);
 	if (ret < 0) {
 		LOG_ERR("Failed to attach chat");
-		modem_pipe_close(data->uart_pipe);
+		modem_pipe_close(data->uart_pipe, K_SECONDS(10));
 		return ret;
 	}
 
 	ret = modem_chat_run_script(&data->chat, &resume_script);
 	if (ret < 0) {
 		LOG_ERR("Failed to initialize GNSS");
-		modem_pipe_close(data->uart_pipe);
+		modem_pipe_close(data->uart_pipe, K_SECONDS(10));
 		return ret;
 	}
 
 	ret = quectel_lx6_configure_pps(dev);
 	if (ret < 0) {
 		LOG_ERR("Failed to configure PPS");
-		modem_pipe_close(data->uart_pipe);
+		modem_pipe_close(data->uart_pipe, K_SECONDS(10));
 		return ret;
 	}
 
@@ -252,7 +252,7 @@ static int quectel_lx6_suspend(const struct device *dev)
 		LOG_INF("Suspended");
 	}
 
-	//modem_pipe_close(data->uart_pipe);
+	//modem_pipe_close(data->uart_pipe, K_SECONDS(10));
 	return ret;
 }
 
@@ -267,7 +267,7 @@ static int quectel_lx6_turn_off(const struct device *dev)
 
 	LOG_INF("Powered off");
 
-	return modem_pipe_close(data->uart_pipe);
+	return modem_pipe_close(data->uart_pipe, K_SECONDS(10));
 }
 
 static int quectel_lx6_exit_standby_mode(const struct device *dev)
@@ -277,7 +277,7 @@ static int quectel_lx6_exit_standby_mode(const struct device *dev)
 
 	LOG_INF("Exit Standby mode");
 
-	ret = modem_pipe_open(data->uart_pipe);
+	ret = modem_pipe_open(data->uart_pipe, K_SECONDS(10));
 	if (ret < 0) {
 		LOG_ERR("Failed to open pipe");
 		return ret;
@@ -286,7 +286,7 @@ static int quectel_lx6_exit_standby_mode(const struct device *dev)
 	ret = modem_chat_attach(&data->chat, data->uart_pipe);
 	if (ret < 0) {
 		LOG_ERR("Failed to attach chat");
-		modem_pipe_close(data->uart_pipe);
+		modem_pipe_close(data->uart_pipe, K_SECONDS(10));
 		return ret;
 	}
 	
