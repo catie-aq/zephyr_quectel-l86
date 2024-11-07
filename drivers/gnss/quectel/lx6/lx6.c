@@ -77,25 +77,29 @@ struct quectel_lx6_data {
 };
 
 #ifdef CONFIG_PM_DEVICE
-MODEM_CHAT_MATCH_DEFINE(pair003_success_match, "$PAIR001,003,0*38", "", NULL);
+MODEM_CHAT_MATCH_DEFINE(pmtk161_success_match, "$PMTK001,161,3*36", "", NULL);
 MODEM_CHAT_SCRIPT_CMDS_DEFINE(
 	suspend_script_cmds,
-	MODEM_CHAT_SCRIPT_CMD_RESP("$PAIR003*39", pair003_success_match)
+	MODEM_CHAT_SCRIPT_CMD_RESP("$PMTK161,0*28", pmtk161_success_match)
 );
 
 MODEM_CHAT_SCRIPT_NO_ABORT_DEFINE(suspend_script, suspend_script_cmds,
 				  NULL, QUECTEL_LX6_SCRIPT_TIMEOUT_S);
+
+MODEM_CHAT_SCRIPT_CMDS_DEFINE(
+	exit_standby_mdoe_script_cmds,
+	MODEM_CHAT_SCRIPT_CMD_RESP("$PMTK000*32", modem_chat_any_match) // unknown command, any data are used to exit standby mode
+);
+
+MODEM_CHAT_SCRIPT_NO_ABORT_DEFINE(exit_standby_mode_script, exit_standby_mdoe_script_cmds,
+				  NULL, QUECTEL_LX6_SCRIPT_TIMEOUT_S);
 #endif /* CONFIG_PM_DEVICE */
 
-// MODEM_CHAT_MATCH_DEFINE(pmtk001_ack_match, "$PMTK001,869,3*37", "", NULL); // not used
 MODEM_CHAT_SCRIPT_CMDS_DEFINE(
 	resume_script_cmds,
 	MODEM_CHAT_SCRIPT_CMD_RESP("$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28", modem_chat_any_match),
-	// MODEM_CHAT_SCRIPT_CMD_RESP("$PAIR062,0,1*3F", pmtk001_ack_match), // not used
 #if CONFIG_GNSS_SATELLITES
 	MODEM_CHAT_SCRIPT_CMD_RESP("$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*29", modem_chat_any_match),
-#else
-
 #endif
 );
 
@@ -237,7 +241,7 @@ static int quectel_lx6_suspend(const struct device *dev)
 	struct quectel_lx6_data *data = dev->data;
 	int ret;
 
-	LOG_INF("Suspending");
+	LOG_INF("Suspending: Go to standby mode");
 
 	quectel_lx6_await_pm_ready(dev);
 
@@ -248,7 +252,7 @@ static int quectel_lx6_suspend(const struct device *dev)
 		LOG_INF("Suspended");
 	}
 
-	modem_pipe_close(data->uart_pipe);
+	//modem_pipe_close(data->uart_pipe);
 	return ret;
 }
 
@@ -266,6 +270,37 @@ static int quectel_lx6_turn_off(const struct device *dev)
 	return modem_pipe_close(data->uart_pipe);
 }
 
+static int quectel_lx6_exit_standby_mode(const struct device *dev)
+{
+	struct quectel_lx6_data *data = dev->data;
+	int ret;
+
+	LOG_INF("Exit Standby mode");
+
+	ret = modem_pipe_open(data->uart_pipe);
+	if (ret < 0) {
+		LOG_ERR("Failed to open pipe");
+		return ret;
+	}
+
+	ret = modem_chat_attach(&data->chat, data->uart_pipe);
+	if (ret < 0) {
+		LOG_ERR("Failed to attach chat");
+		modem_pipe_close(data->uart_pipe);
+		return ret;
+	}
+	
+	// Sending any data will make the modules exit Standby mode.
+	ret = modem_chat_run_script(&data->chat, &exit_standby_mode_script);
+	if (ret < 0) {
+		LOG_ERR("Failed to exit Standby mode GNSS");
+	} else {
+		LOG_INF("Exit Standby mode");
+	}
+
+	return ret;
+}
+
 static int quectel_lx6_pm_action(const struct device *dev, enum pm_device_action action)
 {
 	int ret = -ENOTSUP;
@@ -278,7 +313,7 @@ static int quectel_lx6_pm_action(const struct device *dev, enum pm_device_action
 		break;
 
 	case PM_DEVICE_ACTION_RESUME:
-		ret = quectel_lx6_resume(dev);
+		ret = quectel_lx6_exit_standby_mode(dev);
 		break;
 
 	case PM_DEVICE_ACTION_TURN_ON:
@@ -365,40 +400,9 @@ static void quectel_lx6_get_fix_rate_callback(struct modem_chat *chat, char **ar
 // not supported in the specification protocol v2.2
 static int quectel_lx6_get_fix_rate(const struct device *dev, uint32_t *fix_interval_ms)
 {
-// 	struct quectel_lx6_data *data = dev->data;
-// 	int ret;
-
-// 	quectel_lx6_lock(dev);
-
-// 	ret = gnss_nmea0183_snprintk(data->pmtk_request_buf, sizeof(data->pmtk_request_buf),
-// 				     "PAIR051");
-// 	if (ret < 0) {
-// 		goto unlock_return;
-// 	}
-
-// 	ret = modem_chat_script_chat_set_request(&data->pmtk_script_chat, data->pmtk_request_buf);
-// 	if (ret < 0) {
-// 		goto unlock_return;
-// 	}
-
-// 	strncpy(data->pmtk_match_buf, "$PAIR051,", sizeof(data->pmtk_match_buf));
-// 	ret = modem_chat_match_set_match(&data->pmtk_match, data->pmtk_match_buf);
-// 	if (ret < 0) {
-// 		goto unlock_return;
-// 	}
-
-// 	modem_chat_match_set_callback(&data->pmtk_match, quectel_lx6_get_fix_rate_callback);
-// 	ret = modem_chat_run_script(&data->chat, &data->pmtk_script);
-// 	modem_chat_match_set_callback(&data->pmtk_match, NULL);
-// 	if (ret < 0) {
-// 		goto unlock_return;
-// 	}
-
-// 	*fix_interval_ms = data->fix_rate_response;
-
-// unlock_return:
-// 	quectel_lx6_unlock(dev);
-	return 0;
+	int ret = -ENOTSUP;
+	
+	return ret;
 }
 
 static int quectel_lx6_set_navigation_mode(const struct device *dev,
@@ -464,76 +468,18 @@ unlock_return:
 static void quectel_lx6_get_nav_mode_callback(struct modem_chat *chat, char **argv,
 						uint16_t argc, void *user_data)
 {
-	// struct quectel_lx6_data *data = user_data;
-	// int32_t tmp;
-
-	// if (argc != 3) {
-	// 	return;
-	// }
-
-	// if ((gnss_parse_atoi(argv[1], 10, &tmp) < 0) || (tmp < 0) || (tmp > 7)) {
-	// 	return;
-	// }
-
-	// switch (tmp) {
-	// case QUECTEL_LX6_PMTK_NAV_MODE_FITNESS:
-	// 	data->navigation_mode_response = GNSS_NAVIGATION_MODE_LOW_DYNAMICS;
-	// 	break;
-
-	// case QUECTEL_LX6_PMTK_NAV_MODE_STATIONARY:
-	// 	data->navigation_mode_response = GNSS_NAVIGATION_MODE_ZERO_DYNAMICS;
-	// 	break;
-
-	// case QUECTEL_LX6_PMTK_NAV_MODE_AVIATION:
-	// 	data->navigation_mode_response = GNSS_NAVIGATION_MODE_HIGH_DYNAMICS;
-	// 	break;
-
-	// default:
-	// 	data->navigation_mode_response = GNSS_NAVIGATION_MODE_BALANCED_DYNAMICS;
-	// 	break;
-	// }
+	int ret = -ENOTSUP;
+	
+	return ret;
 }
 
 // not supported in the specification protocol v2.2
 static int quectel_lx6_get_navigation_mode(const struct device *dev,
 					     enum gnss_navigation_mode *mode)
 {
-// 	struct quectel_lx6_data *data = dev->data;
-// 	int ret;
-
-// 	quectel_lx6_lock(dev);
-
-// 	ret = gnss_nmea0183_snprintk(data->pmtk_request_buf, sizeof(data->pmtk_request_buf),
-// 				     "PAIR081");
-// 	if (ret < 0) {
-// 		goto unlock_return;
-// 	}
-
-// 	ret = modem_chat_script_chat_set_request(&data->pmtk_script_chat, data->pmtk_request_buf);
-// 	if (ret < 0) {
-// 		goto unlock_return;
-// 	}
-
-// 	strncpy(data->pmtk_match_buf, "$PAIR081,", sizeof(data->pmtk_match_buf));
-// 	ret = modem_chat_match_set_match(&data->pmtk_match, data->pmtk_match_buf);
-// 	if (ret < 0) {
-// 		goto unlock_return;
-// 	}
-
-// 	modem_chat_match_set_callback(&data->pmtk_match, quectel_lx6_get_nav_mode_callback);
-// 	ret = modem_chat_run_script(&data->chat, &data->pmtk_script);
-// 	modem_chat_match_set_callback(&data->pmtk_match, NULL);
-// 	if (ret < 0) {
-// 		goto unlock_return;
-// 	}
-
-// 	*mode = data->navigation_mode_response;
-
-// unlock_return:
-// 	quectel_lx6_unlock(dev);
-// 	return ret;
-
-	return 0;
+	int ret = -ENOTSUP;
+	
+	return ret;
 }
 
 static int quectel_lx6_set_enabled_systems(const struct device *dev, gnss_systems_t systems)
@@ -684,29 +630,6 @@ static int quectel_lx6_get_enabled_systems(const struct device *dev, gnss_system
 	}
 
 	// get SBAS system: not supported in protocol specification v2.2 
-	// ret = gnss_nmea0183_snprintk(data->pmtk_request_buf, sizeof(data->pmtk_request_buf),
-	// 			     "PMTK");
-	// if (ret < 0) {
-	// 	goto unlock_return;
-	// }
-
-	// ret = modem_chat_script_chat_set_request(&data->pmtk_script_chat, data->pmtk_request_buf);
-	// if (ret < 0) {
-	// 	goto unlock_return;
-	// }
-
-	// strncpy(data->pmtk_match_buf, "$PMTK,", sizeof(data->pmtk_match_buf));
-	// ret = modem_chat_match_set_match(&data->pmtk_match, data->pmtk_match_buf);
-	// if (ret < 0) {
-	// 	goto unlock_return;
-	// }
-
-	// modem_chat_match_set_callback(&data->pmtk_match, quectel_lx6_get_sbas_status_callback);
-	// ret = modem_chat_run_script(&data->chat, &data->pmtk_script);
-	// modem_chat_match_set_callback(&data->pmtk_match, NULL);
-	if (ret < 0) {
-		goto unlock_return;
-	}
 
 	*systems = data->enabled_systems_response;
 
