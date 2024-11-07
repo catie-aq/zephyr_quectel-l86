@@ -380,24 +380,6 @@ unlock_return:
 }
 
 // not supported in the specification protocol v2.2
-static void quectel_lx6_get_fix_rate_callback(struct modem_chat *chat, char **argv,
-						uint16_t argc, void *user_data)
-{
-	struct quectel_lx6_data *data = user_data;
-	int32_t tmp;
-
-	if (argc != 3) {
-		return;
-	}
-
-	if ((gnss_parse_atoi(argv[1], 10, &tmp) < 0) || (tmp < 0) || (tmp > 1000)) {
-		return;
-	}
-
-	data->fix_rate_response = (uint16_t)tmp;
-}
-
-// not supported in the specification protocol v2.2
 static int quectel_lx6_get_fix_rate(const struct device *dev, uint32_t *fix_interval_ms)
 {
 	int ret = -ENOTSUP;
@@ -461,15 +443,6 @@ static int quectel_lx6_set_navigation_mode(const struct device *dev,
 
 unlock_return:
 	quectel_lx6_unlock(dev);
-	return ret;
-}
-
-// not supported in the specification protocol v2.2
-static void quectel_lx6_get_nav_mode_callback(struct modem_chat *chat, char **argv,
-						uint16_t argc, void *user_data)
-{
-	int ret = -ENOTSUP;
-	
 	return ret;
 }
 
@@ -584,19 +557,6 @@ static void quectel_lx6_get_search_mode_callback(struct modem_chat *chat, char *
 	data->enabled_systems_response |= search_mode_enabled(argv[4]) ? GNSS_SYSTEM_BEIDOU : 0;
 	data->enabled_systems_response |= search_mode_enabled(argv[5]) ? GNSS_SYSTEM_QZSS : 0;
 }
-
-static void quectel_lx6_get_sbas_status_callback(struct modem_chat *chat, char **argv,
-						   uint16_t argc, void *user_data)
-{
-	struct quectel_lx6_data *data = user_data;
-
-	if (argc != 3) {
-		return;
-	}
-
-	data->enabled_systems_response |= ('1' == argv[1][0]) ? GNSS_SYSTEM_SBAS : 0;
-}
-
 
 static int quectel_lx6_get_enabled_systems(const struct device *dev, gnss_systems_t *systems)
 {
