@@ -1,0 +1,7 @@
+sample:
+  name: Quectel LG77L & Lx0 & Lx6 & LC86L GNSS modem sample
+tests:
+  sample.default:
+    tags: gnss
+    integration_platforms:
+      - zest_core_stm32l4a6rg
