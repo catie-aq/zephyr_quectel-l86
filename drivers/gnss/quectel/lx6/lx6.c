@@ -78,36 +78,38 @@ struct quectel_lx6_data {
 
 #ifdef CONFIG_PM_DEVICE
 MODEM_CHAT_MATCH_DEFINE(pmtk161_success_match, "$PMTK001,161,3*36", "", NULL);
-MODEM_CHAT_SCRIPT_CMDS_DEFINE(
-	suspend_script_cmds,
-	MODEM_CHAT_SCRIPT_CMD_RESP("$PMTK161,0*28", pmtk161_success_match)
-);
+MODEM_CHAT_SCRIPT_CMDS_DEFINE(suspend_script_cmds,
+			      MODEM_CHAT_SCRIPT_CMD_RESP("$PMTK161,0*28", pmtk161_success_match));
 
-MODEM_CHAT_SCRIPT_NO_ABORT_DEFINE(suspend_script, suspend_script_cmds,
-				  NULL, QUECTEL_LX6_SCRIPT_TIMEOUT_S);
+MODEM_CHAT_SCRIPT_NO_ABORT_DEFINE(suspend_script, suspend_script_cmds, NULL,
+				  QUECTEL_LX6_SCRIPT_TIMEOUT_S);
 
 MODEM_CHAT_SCRIPT_CMDS_DEFINE(
 	exit_standby_mdoe_script_cmds,
-	MODEM_CHAT_SCRIPT_CMD_RESP("$PMTK000*32", modem_chat_any_match) // unknown command, any data are used to exit standby mode
+	MODEM_CHAT_SCRIPT_CMD_RESP(
+		"$PMTK000*32",
+		modem_chat_any_match) // unknown command, any data are used to exit standby mode
 );
 
-MODEM_CHAT_SCRIPT_NO_ABORT_DEFINE(exit_standby_mode_script, exit_standby_mdoe_script_cmds,
-				  NULL, QUECTEL_LX6_SCRIPT_TIMEOUT_S);
+MODEM_CHAT_SCRIPT_NO_ABORT_DEFINE(exit_standby_mode_script, exit_standby_mdoe_script_cmds, NULL,
+				  QUECTEL_LX6_SCRIPT_TIMEOUT_S);
 #endif /* CONFIG_PM_DEVICE */
 
 MODEM_CHAT_SCRIPT_CMDS_DEFINE(
 	resume_script_cmds,
-	MODEM_CHAT_SCRIPT_CMD_RESP("$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28", modem_chat_any_match),
+	MODEM_CHAT_SCRIPT_CMD_RESP("$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28",
+				   modem_chat_any_match),
 #if CONFIG_GNSS_SATELLITES
-	MODEM_CHAT_SCRIPT_CMD_RESP("$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*29", modem_chat_any_match),
+	MODEM_CHAT_SCRIPT_CMD_RESP("$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*29",
+				   modem_chat_any_match),
 #endif
 );
 
-MODEM_CHAT_SCRIPT_NO_ABORT_DEFINE(resume_script, resume_script_cmds,
-				  NULL, QUECTEL_LX6_SCRIPT_TIMEOUT_S);
+MODEM_CHAT_SCRIPT_NO_ABORT_DEFINE(resume_script, resume_script_cmds, NULL,
+				  QUECTEL_LX6_SCRIPT_TIMEOUT_S);
 
-MODEM_CHAT_MATCHES_DEFINE(unsol_matches,
-	MODEM_CHAT_MATCH_WILDCARD("$??GGA,", ",*", gnss_nmea0183_match_gga_callback),
+MODEM_CHAT_MATCHES_DEFINE(
+	unsol_matches, MODEM_CHAT_MATCH_WILDCARD("$??GGA,", ",*", gnss_nmea0183_match_gga_callback),
 	MODEM_CHAT_MATCH_WILDCARD("$??RMC,", ",*", gnss_nmea0183_match_rmc_callback),
 #if CONFIG_GNSS_SATELLITES
 	MODEM_CHAT_MATCH_WILDCARD("$??GSV,", ",*", gnss_nmea0183_match_gsv_callback),
@@ -252,7 +254,7 @@ static int quectel_lx6_suspend(const struct device *dev)
 		LOG_INF("Suspended");
 	}
 
-	//modem_pipe_close(data->uart_pipe);
+	// modem_pipe_close(data->uart_pipe);
 	return ret;
 }
 
@@ -289,7 +291,7 @@ static int quectel_lx6_exit_standby_mode(const struct device *dev)
 		modem_pipe_close(data->uart_pipe);
 		return ret;
 	}
-	
+
 	// Sending any data will make the modules exit Standby mode.
 	ret = modem_chat_run_script(&data->chat, &exit_standby_mode_script);
 	if (ret < 0) {
@@ -383,12 +385,11 @@ unlock_return:
 static int quectel_lx6_get_fix_rate(const struct device *dev, uint32_t *fix_interval_ms)
 {
 	int ret = -ENOTSUP;
-	
+
 	return ret;
 }
 
-static int quectel_lx6_set_navigation_mode(const struct device *dev,
-					     enum gnss_navigation_mode mode)
+static int quectel_lx6_set_navigation_mode(const struct device *dev, enum gnss_navigation_mode mode)
 {
 	struct quectel_lx6_data *data = dev->data;
 	uint8_t navigation_mode = 0;
@@ -448,10 +449,10 @@ unlock_return:
 
 // not supported in the specification protocol v2.2
 static int quectel_lx6_get_navigation_mode(const struct device *dev,
-					     enum gnss_navigation_mode *mode)
+					   enum gnss_navigation_mode *mode)
 {
 	int ret = -ENOTSUP;
-	
+
 	return ret;
 }
 
@@ -461,8 +462,8 @@ static int quectel_lx6_set_enabled_systems(const struct device *dev, gnss_system
 	gnss_systems_t supported_systems;
 	int ret;
 
-	supported_systems = (GNSS_SYSTEM_GPS | GNSS_SYSTEM_GLONASS | GNSS_SYSTEM_GALILEO |
-			     GNSS_SYSTEM_BEIDOU);
+	supported_systems =
+		(GNSS_SYSTEM_GPS | GNSS_SYSTEM_GLONASS | GNSS_SYSTEM_GALILEO | GNSS_SYSTEM_BEIDOU);
 
 	if ((~supported_systems) & systems) {
 		return -EINVAL;
@@ -470,12 +471,10 @@ static int quectel_lx6_set_enabled_systems(const struct device *dev, gnss_system
 
 	quectel_lx6_lock(dev);
 
-	ret = gnss_nmea0183_snprintk(data->pmtk_request_buf, sizeof(data->pmtk_request_buf),
-				     "PMTK353,%u,%u,%u,0,%u",
-				     (0 < (systems & GNSS_SYSTEM_GPS)),
-				     (0 < (systems & GNSS_SYSTEM_GLONASS)),
-				     (0 < (systems & GNSS_SYSTEM_GALILEO)),
-				     (0 < (systems & GNSS_SYSTEM_BEIDOU)));
+	ret = gnss_nmea0183_snprintk(
+		data->pmtk_request_buf, sizeof(data->pmtk_request_buf), "PMTK353,%u,%u,%u,0,%u",
+		(0 < (systems & GNSS_SYSTEM_GPS)), (0 < (systems & GNSS_SYSTEM_GLONASS)),
+		(0 < (systems & GNSS_SYSTEM_GALILEO)), (0 < (systems & GNSS_SYSTEM_BEIDOU)));
 	if (ret < 0) {
 		goto unlock_return;
 	}
@@ -485,12 +484,10 @@ static int quectel_lx6_set_enabled_systems(const struct device *dev, gnss_system
 		goto unlock_return;
 	}
 
-	ret = gnss_nmea0183_snprintk(data->pmtk_match_buf, sizeof(data->pmtk_match_buf),
-				     "PMTK001,353,3,%u,%u,%u,0,%u",
-				     (0 < (systems & GNSS_SYSTEM_GPS)),
-				     (0 < (systems & GNSS_SYSTEM_GLONASS)),
-				     (0 < (systems & GNSS_SYSTEM_GALILEO)),	
-				     (0 < (systems & GNSS_SYSTEM_BEIDOU)));
+	ret = gnss_nmea0183_snprintk(
+		data->pmtk_match_buf, sizeof(data->pmtk_match_buf), "PMTK001,353,3,%u,%u,%u,0,%u",
+		(0 < (systems & GNSS_SYSTEM_GPS)), (0 < (systems & GNSS_SYSTEM_GLONASS)),
+		(0 < (systems & GNSS_SYSTEM_GALILEO)), (0 < (systems & GNSS_SYSTEM_BEIDOU)));
 	if (ret < 0) {
 		goto unlock_return;
 	}
@@ -543,7 +540,7 @@ static inline bool search_mode_enabled(const char *arg)
 }
 
 static void quectel_lx6_get_search_mode_callback(struct modem_chat *chat, char **argv,
-						   uint16_t argc, void *user_data)
+						 uint16_t argc, void *user_data)
 {
 	struct quectel_lx6_data *data = user_data;
 
@@ -589,7 +586,7 @@ static int quectel_lx6_get_enabled_systems(const struct device *dev, gnss_system
 		goto unlock_return;
 	}
 
-	// get SBAS system: not supported in protocol specification v2.2 
+	// get SBAS system: not supported in protocol specification v2.2
 
 	*systems = data->enabled_systems_response;
 
@@ -675,8 +672,7 @@ static void quectel_lx6_init_pmtk_script(const struct device *dev)
 	modem_chat_match_set_separators(&data->pmtk_match, ",*");
 
 	modem_chat_script_chat_init(&data->pmtk_script_chat);
-	modem_chat_script_chat_set_response_matches(&data->pmtk_script_chat,
-						    &data->pmtk_match, 1);
+	modem_chat_script_chat_set_response_matches(&data->pmtk_script_chat, &data->pmtk_match, 1);
 
 	modem_chat_script_init(&data->pmtk_script);
 	modem_chat_script_set_name(&data->pmtk_script, "pmtk");
@@ -721,26 +717,24 @@ static int quectel_lx6_init(const struct device *dev)
 	return pm_device_runtime_enable(dev);
 }
 
-#define LX6_INST_NAME(inst, name) \
-	_CONCAT(_CONCAT(_CONCAT(name, _), DT_DRV_COMPAT), inst)
+#define LX6_INST_NAME(inst, name) _CONCAT(_CONCAT(_CONCAT(name, _), DT_DRV_COMPAT), inst)
 
-#define LX6_DEVICE(inst)								\
-	static const struct quectel_lx6_config LX6_INST_NAME(inst, config) = {	\
-		.uart = DEVICE_DT_GET(DT_INST_BUS(inst)),				\
-		.pps_mode = DT_INST_STRING_UPPER_TOKEN(inst, pps_mode),			\
-		.pps_pulse_width = DT_INST_PROP(inst, pps_pulse_width),			\
-	};										\
-											\
-	static struct quectel_lx6_data LX6_INST_NAME(inst, data) = {		\
-		.chat_delimiter = {'\r', '\n'},						\
-	};										\
-											\
-	PM_DEVICE_DT_INST_DEFINE(inst, quectel_lx6_pm_action);			\
-											\
-	DEVICE_DT_INST_DEFINE(inst, quectel_lx6_init, PM_DEVICE_DT_INST_GET(inst),	\
-			 &LX6_INST_NAME(inst, data), &LX6_INST_NAME(inst, config),	\
-			 POST_KERNEL, CONFIG_GNSS_INIT_PRIORITY, &gnss_api);
-
+#define LX6_DEVICE(inst)                                                                           \
+	static const struct quectel_lx6_config LX6_INST_NAME(inst, config) = {                     \
+		.uart = DEVICE_DT_GET(DT_INST_BUS(inst)),                                          \
+		.pps_mode = DT_INST_STRING_UPPER_TOKEN(inst, pps_mode),                            \
+		.pps_pulse_width = DT_INST_PROP(inst, pps_pulse_width),                            \
+	};                                                                                         \
+                                                                                                   \
+	static struct quectel_lx6_data LX6_INST_NAME(inst, data) = {                               \
+		.chat_delimiter = {'\r', '\n'},                                                    \
+	};                                                                                         \
+                                                                                                   \
+	PM_DEVICE_DT_INST_DEFINE(inst, quectel_lx6_pm_action);                                     \
+                                                                                                   \
+	DEVICE_DT_INST_DEFINE(inst, quectel_lx6_init, PM_DEVICE_DT_INST_GET(inst),                 \
+			      &LX6_INST_NAME(inst, data), &LX6_INST_NAME(inst, config),            \
+			      POST_KERNEL, CONFIG_GNSS_INIT_PRIORITY, &gnss_api);
 
 #define DT_DRV_COMPAT quectel_l86
 DT_INST_FOREACH_STATUS_OKAY(LX6_DEVICE)

@@ -32,8 +32,8 @@ static void gnss_satellites_cb(const struct device *dev, const struct gnss_satel
 	for (unsigned int i = 0; i != size; ++i) {
 		tracked_count += satellites[i].is_tracked;
 	}
-	printf("%u satellite%s reported (of which %u tracked)!\n",
-		size, size > 1 ? "s" : "", tracked_count);
+	printf("%u satellite%s reported (of which %u tracked)!\n", size, size > 1 ? "s" : "",
+	       tracked_count);
 }
 #endif
 GNSS_SATELLITES_CALLBACK_DEFINE(GNSS_MODEM, gnss_satellites_cb);
