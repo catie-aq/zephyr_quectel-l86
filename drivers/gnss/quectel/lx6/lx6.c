@@ -86,7 +86,9 @@ MODEM_CHAT_SCRIPT_NO_ABORT_DEFINE(suspend_script, suspend_script_cmds, NULL,
 
 MODEM_CHAT_SCRIPT_CMDS_DEFINE(
 	exit_standby_mdoe_script_cmds,
-	MODEM_CHAT_SCRIPT_CMD_RESP("$PMTK000*32", modem_chat_any_match) /* unknown command, any data are used to exit standby mode */
+	MODEM_CHAT_SCRIPT_CMD_RESP(
+		"$PMTK000*32",
+		modem_chat_any_match) /* unknown command, any data are used to exit standby mode */
 );
 
 MODEM_CHAT_SCRIPT_NO_ABORT_DEFINE(exit_standby_mode_script, exit_standby_mdoe_script_cmds, NULL,
@@ -288,7 +290,7 @@ static int quectel_lx6_exit_standby_mode(const struct device *dev)
 		modem_pipe_close(data->uart_pipe, K_SECONDS(10));
 		return ret;
 	}
-	
+
 	/* Sending any data will make the modules exit Standby mode. */
 	ret = modem_chat_run_script(&data->chat, &exit_standby_mode_script);
 	if (ret < 0) {
