@@ -86,9 +86,7 @@ MODEM_CHAT_SCRIPT_NO_ABORT_DEFINE(suspend_script, suspend_script_cmds, NULL,
 
 MODEM_CHAT_SCRIPT_CMDS_DEFINE(
 	exit_standby_mdoe_script_cmds,
-	MODEM_CHAT_SCRIPT_CMD_RESP(
-		"$PMTK000*32",
-		modem_chat_any_match) // unknown command, any data are used to exit standby mode
+	MODEM_CHAT_SCRIPT_CMD_RESP("$PMTK000*32", modem_chat_any_match) /* unknown command, any data are used to exit standby mode */
 );
 
 MODEM_CHAT_SCRIPT_NO_ABORT_DEFINE(exit_standby_mode_script, exit_standby_mdoe_script_cmds, NULL,
@@ -254,7 +252,6 @@ static int quectel_lx6_suspend(const struct device *dev)
 		LOG_INF("Suspended");
 	}
 
-	//modem_pipe_close(data->uart_pipe, K_SECONDS(10));
 	return ret;
 }
 
@@ -291,8 +288,8 @@ static int quectel_lx6_exit_standby_mode(const struct device *dev)
 		modem_pipe_close(data->uart_pipe, K_SECONDS(10));
 		return ret;
 	}
-
-	// Sending any data will make the modules exit Standby mode.
+	
+	/* Sending any data will make the modules exit Standby mode. */
 	ret = modem_chat_run_script(&data->chat, &exit_standby_mode_script);
 	if (ret < 0) {
 		LOG_ERR("Failed to exit Standby mode GNSS");
@@ -381,7 +378,7 @@ unlock_return:
 	return ret;
 }
 
-// not supported in the specification protocol v2.2
+/* not supported in the specification protocol v2.2 */
 static int quectel_lx6_get_fix_rate(const struct device *dev, uint32_t *fix_interval_ms)
 {
 	int ret = -ENOTSUP;
@@ -447,7 +444,7 @@ unlock_return:
 	return ret;
 }
 
-// not supported in the specification protocol v2.2
+/* not supported in the specification protocol v2.2 */
 static int quectel_lx6_get_navigation_mode(const struct device *dev,
 					   enum gnss_navigation_mode *mode)
 {
@@ -586,8 +583,7 @@ static int quectel_lx6_get_enabled_systems(const struct device *dev, gnss_system
 		goto unlock_return;
 	}
 
-	// get SBAS system: not supported in protocol specification v2.2
-
+	/* get SBAS system: not supported in protocol specification v2.2 */
 	*systems = data->enabled_systems_response;
 
 unlock_return:
